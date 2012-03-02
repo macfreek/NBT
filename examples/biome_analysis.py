@@ -40,6 +40,9 @@ BIOMES = {
 	18: "Forest Hills",
 	19: "Taiga Hills",
 	20: "Mountains Edge",
+	21: "Jungle",
+	22: "Jungle Hills",
+	255: "Unknown",
 }
 
 
