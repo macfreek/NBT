@@ -77,8 +77,8 @@ def main(world_folder):
 	world = WorldFolder(world_folder, Format.ANVIL)
 	
 	try:
-		for chunk in world.iter_chunks():
-			print_results(chests_per_chunk(chunk.level))
+		for chunk in world.iter_nbt():
+			print_results(chests_per_chunk(chunk["Level"]))
 
 	except KeyboardInterrupt:
 		return 4 # EINTR
