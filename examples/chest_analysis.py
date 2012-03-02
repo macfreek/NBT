@@ -3,7 +3,7 @@
 Finds and prints the contents of chests (including minecart chests)
 """
 import locale, os, sys
-import glob
+
 # local module
 try:
 	import nbt
@@ -15,6 +15,7 @@ except ImportError:
 	sys.path.append(extrasearchpath)
 from nbt.region import RegionFile
 from nbt.chunk import Chunk
+from nbt.world import WorldFolder,Format
 
 class Position(object):
 	def __init__(self, x,y,z):
@@ -56,20 +57,6 @@ def chests_per_chunk(chunk):
 			entities.append(Chest("Chest",(x,y,z),items))
 	return entities
 
-def process_region_file(filename):
-	"""Given a region filename, return the number of blocks of each ID in that file"""
-	chests = []
-	file = RegionFile(filename)
-	
-	# Get all chunks
-	chunks = file.get_chunks()
-	print "Parsing",os.path.basename(filename),"...",len(chunks),"chunks"
-	for cc in chunks:
-		chunk = file.get_chunk(cc['x'], cc['z'])
-		leveldata = chunk['Level']
-		chests.extend(chests_per_chunk(leveldata))
-	
-	return chests
 
 
 def print_results(chests):
@@ -87,13 +74,12 @@ def print_results(chests):
 
 
 def main(world_folder):
-	regions = glob.glob(os.path.join(world_folder,'region','*.mcr'))
+	world = WorldFolder(world_folder, Format.ANVIL)
 	
 	try:
-		for filename in regions:
-			chests = process_region_file(os.path.join(world_folder,'region',filename))
-			print_results(chests)
-	
+		for chunk in world.iter_chunks():
+			print_results(chests_per_chunk(chunk.level))
+
 	except KeyboardInterrupt:
 		return 4 # EINTR
 	
