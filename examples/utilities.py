@@ -1,5 +1,4 @@
-#!/usr/bin/env python
-
+# Python module
 """
 Useful utility functions for handling large NBT structures elegantly and
 Pythonically.
