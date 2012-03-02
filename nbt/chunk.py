@@ -4,16 +4,43 @@ from struct import pack, unpack
 import array, math
 
 class Chunk(object):
+	"""Abstract class, representing either a McRegion or Anvil Chunk."""
+	def __new__(cls, nbt, *args, **kwargs):
+		"""Python trickery to return a McRegionChunk(), even if the caller asked for a Chunk()"""
+		if cls == Chunk:
+			if "Sections" in nbt['Level']:
+				cls = AnvilChunk
+			elif "Blocks" in nbt['Level']:
+				cls = McRegionChunk
+		return object.__new__(cls, nbt,  *args, **kwargs)
+	
 	def __init__(self, nbt):
-		chunk_data = nbt['Level']
-		self.coords = chunk_data['xPos'],chunk_data['zPos']
-		self.blocks = BlockArray(chunk_data['Blocks'].value, chunk_data['Data'].value)
+		raise NotImplemented("Use McRegionChunk() or AnvilChunk()")
 
 	def get_coords(self):
 		return (self.coords[0].value,self.coords[1].value)
 
 	def __repr__(self):
-		return "Chunk("+str(self.coords[0])+","+str(self.coords[1])+")"
+		return self.__class__.__name__+"("+str(self.coords[0])+","+str(self.coords[1])+")"
+
+
+
+class McRegionChunk(Chunk):
+	def __init__(self, nbt):
+		self.level = nbt['Level']
+		self.coords = self.level['xPos'],self.level['zPos']
+		self.blocks = BlockArray(self.level['Blocks'].value, self.level['Data'].value)
+
+
+
+class AnvilChunk(Chunk):
+	def __init__(self, nbt):
+		self.level = nbt['Level']
+		self.coords = self.level['xPos'],self.level['zPos']
+	# TODO: store sections, and Blocks/Data/AddBlock in each
+
+
+
 
 """ Convenience class for dealing with a Block/data byte array """
 class BlockArray(object):
