@@ -42,14 +42,14 @@ BIOMES = {
 	20: "Mountains Edge",
 	21: "Jungle",
 	22: "Jungle Hills",
-	255: "Unknown",
+	# 255: "Not yet calculated",
 }
 
 
 def print_results(biome_totals):
 	locale.setlocale(locale.LC_ALL, 'en_US')
 	for id,count in enumerate(biome_totals):
-		if count == 0 and id not in BIOMES:
+		if id == 255 or (count == 0 and id not in BIOMES):
 			continue
 		if id in BIOMES:
 			biome = BIOMES[id]+" (%d)" % id
