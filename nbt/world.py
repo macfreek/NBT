@@ -27,6 +27,9 @@ class UnknownWorldFormat(Exception):
 	def __init__(self, msg):
 		self.msg = msg
 
+class InconceivedChunk(Exception):
+	"""Specified does not exist in world file"""
+
 class WorldFolder(object):
 	def __init__(self, world_folder, format=None):
 		self.worldfolder = world_folder
@@ -107,7 +110,10 @@ class WorldFolder(object):
 		# TODO: Implement (calculate region filename from x,z, see if file exists.)
 		rx,x = divmod(x,32)
 		rz,z = divmod(z,32)
-		return self.format.chunkclass(self.get_region(rx,rz).get_chunk(x,z))
+		nbt = self.get_region(rx,rz).get_chunk(x,z)
+		if nbt == None:
+			raise InconceivedChunk("Chunk %s,%s not present in world" % (32*rx+x,32*rz+z))
+		return self.format.chunkclass(nbt)
 	
 	def get_chunks(self, boundingbox=None):
 		"""Returns a list of all chunks. Use this function if you access the chunk
