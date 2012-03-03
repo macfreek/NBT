@@ -34,6 +34,7 @@ class RegionFile(object):
 	"""
 	
 	def __init__(self, filename=None, fileobj=None):
+		self.file = None
 		if filename:
 			self.filename = filename
 			self.file = open(filename, 'r+b')
