@@ -15,7 +15,7 @@ except ImportError:
 	sys.path.append(extrasearchpath)
 from nbt.region import RegionFile
 from nbt.chunk import Chunk
-from nbt.world import WorldFolder,Format
+from nbt.world import WorldFolder,ANVIL
 
 class Position(object):
 	def __init__(self, x,y,z):
@@ -74,7 +74,7 @@ def print_results(chests):
 
 
 def main(world_folder):
-	world = WorldFolder(world_folder, Format.ANVIL)
+	world = WorldFolder(world_folder, ANVIL)
 	
 	try:
 		for chunk in world.iter_nbt():

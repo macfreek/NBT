@@ -4,13 +4,23 @@ import os, glob, re
 from . import region
 from . import chunk
 
+
 class Format(object):
 	# format constants
-	INVALID     = -1  # Unknown or invalid world folder format
-	ALPHA       = 1   # Unsupported
-	MCREGION    = 2   # "Beta" file format
-	ANVIL       = 3   # Anvil file format, introduced in Minecraft 1.2
+	extension = None
+	chunkclass = chunk.Chunk
 
+class ALPHA(Format):
+	pass
+
+class MCREGION(Format):
+	extension = 'mcr'
+	chunkclass = chunk.Chunk
+	# chunkclass = chunk.McRegionChunk  # TODO: change to McRegionChunk when done
+
+class ANVIL(Format):
+	extension = 'mca'
+	chunkclass = chunk.AnvilChunk
 
 class UnknownWorldFormat(Exception):
 	"""Unknown or invalid world folder"""
@@ -26,18 +36,18 @@ class WorldFolder(object):
 		anvil_fn     = list(glob.glob(os.path.join(world_folder,'region','r.*.*.mca')))
 		if self.format == None:
 			if (len(anvil_fn) > 0):
-				self.format = Format.ANVIL
+				self.format = ANVIL
 				regionfiles = anvil_fn
 			elif (len(mcregion_fn) > 0):
-				self.format = Format.MCREGION
+				self.format = MCREGION
 				regionfiles = mcregion_fn
 			else:
 				raise UnknownWorldFormat("Empty world or not a McRegion or Anvil format")
-		elif self.format == Format.ANVIL:
+		elif self.format == ANVIL:
 			if len(anvil_fn) == 0:
 				raise UnknownWorldFormat("Empty world or not a Anvil format")
 			regionfiles = anvil_fn
-		elif self.format == Format.MCREGION:
+		elif self.format == MCREGION:
 			if len(mcregion_fn) == 0:
 				raise UnknownWorldFormat("Empty world or not a McRegion format")
 			regionfiles = mcregion_fn
@@ -90,14 +100,14 @@ class WorldFolder(object):
 		# TODO: Implement sort order
 		for region in self.iter_regions():
 			for c in region.iter_chunks():
-				yield chunk.Chunk(c)
+				yield self.format.chunkclass(c)
 
 	def get_chunk(self,x,z):
 		"""Return a chunk specified by the chunk coordinates x,z."""
 		# TODO: Implement (calculate region filename from x,z, see if file exists.)
 		rx,x = divmod(x,32)
 		rz,z = divmod(z,32)
-		return chunk.Chunk(self.get_region(rx,rz).get_chunk(x,z))
+		return self.format.chunkclass(self.get_region(rx,rz).get_chunk(x,z))
 	
 	def get_chunks(self, boundingbox=None):
 		"""Returns a list of all chunks. Use this function if you access the chunk
@@ -132,7 +142,7 @@ class WorldFolder(object):
 			rx,rz = 32*rx,32*rz
 			for cc in region.get_chunk_coords():
 				x,z = (rx+cc['x'],rz+cc['z'])
-				c1 = chunk.Chunk(region.get_chunk(cc['x'],cc['z']))
+				c1 = self.format.chunkclass(region.get_chunk(cc['x'],cc['z']))
 				c2 = self.get_chunk(x,z)
 				correct_coords = (c2.get_coords() == (x,z))
 				is_comparable = (c1 == c2) # test __eq__ function

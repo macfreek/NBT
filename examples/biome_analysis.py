@@ -16,7 +16,7 @@ except ImportError:
 	sys.path.append(extrasearchpath)
 from nbt.region import RegionFile
 from nbt.chunk import Chunk
-from nbt.world import WorldFolder,Format,UnknownWorldFormat
+from nbt.world import WorldFolder,ANVIL,UnknownWorldFormat
 
 BIOMES = {
 	0 : "Ocean",
@@ -60,7 +60,7 @@ def print_results(biome_totals):
 
 def main(world_folder):
 	try:
-		world = WorldFolder(world_folder, Format.ANVIL)
+		world = WorldFolder(world_folder, ANVIL)
 	except UnknownWorldFormat as msg:
 		sys.stderr.write(msg.msg+"\n")
 		sys.exit(4)

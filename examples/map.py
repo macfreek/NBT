@@ -19,7 +19,7 @@ except ImportError:
 	sys.path.append(extrasearchpath)
 from nbt.region import RegionFile
 from nbt.chunk import Chunk
-from nbt.world import WorldFolder,Format
+from nbt.world import WorldFolder,MCREGION
 # PIL module (not build-in)
 try:
 	from PIL import Image
@@ -177,7 +177,7 @@ def hsl2rgb(H,S,L):
 
 
 def main(world_folder):
-	world = WorldFolder(world_folder, Format.MCREGION)
+	world = WorldFolder(world_folder, MCREGION)
 	bb = world.get_boundingbox()
 	map = Image.new('RGB', (16*bb.lenx(),16*bb.lenz()))
 	t = world.chunk_count()
