@@ -200,21 +200,30 @@ class BaseChunk(object):
 class McRegionChunk(BaseChunk):
 	"""Representation of a Chunk in McRegion format."""
 	def __init__(self, nbt):
-		self.blocks = self  # for backward compatibility
 		self.nbt = nbt
-		self.level = nbt['Level']
-		self.coords = self.level['xPos'],self.level['zPos']
-		self.data = self.level['Data'].value
+		level = nbt['Level']
+		self.coords = level['xPos'],level['zPos']
+		# self.blockdata is a flat array of integers in native XZY order, 
+		# each an integer with combined Blocks and Data values:
+		# blockdata[i] = blocks[i] << 4 + data[i]   with   i = (x*16)+z)*16+y
+		self.blockdata = []
+		# self.heightmap is a flat array of integers (0-127) in native ZX order, 
+		# Note that the heightmap contains the topmost SOLID block. Grass, etc. is ignored.
+		self.heightmap = []
+		# self.biomes is a flat array of integers (0-255) in ZX order. (i = (z * 16 + x))
+		# Since biome IDs are not stored in McRegion format, it always set to 255 ("undetermined")
+		self.biomes    = 256*[255]
+		# self.blocks is deprecated: it used to refer to a BlockArray instance. 
+		# It's functionality (and all it's variables are now present in McRegionChunk)
 		self.blocks = self  # for backward compatibility
-		self.parse_blocks()
-		# self.blocks = BlockArray(self.level['Blocks'].value, self.level['Data'].value)
+		# It's number crunching time.
+		self.parse_blocks() # set self.blockdata
 	def parse_blocks(self):
-		"""Read NBT and fill self.blocks, self.data and self.heightmap"""
+		"""Read NBT and fill self.blockdata and self.heightmap"""
 		# TODO: to be written
 		self._nbtisdirty = False
-		
 	def update_nbt(self):
-		"""Update the nbt['Level'] based on self.blocks, self.data and self.heightmap"""
+		"""Update self.nbt based on self.blockdata and self.heightmap"""
 		# TODO: to be written
 		self._nbtisdirty = False
 	def get_nbt(self):
@@ -228,11 +237,34 @@ class McRegionChunk(BaseChunk):
 class AnvilChunk(BaseChunk):
 	def __init__(self, nbt):
 		self.nbt = nbt
-		self.level = nbt['Level']
-		self.coords = self.level['xPos'],self.level['zPos']
-		self.data = self.level['Data'].value
+		level = nbt['Level']
+		self.coords = level['xPos'],level['zPos']
+		# self.blockdata is a flat array of integers in native YZX order, 
+		# each an integer with combined AddBlocks, Blocks and Data values:
+		# blockdata[i] = addblocks[i] << 8 + blocks[i] << 4 + data[i] 
+		# with   i = (y*16)+z)*16+x
+		self.blockdata = []
+		# self.heightmap is a flat array of integers (0-255) in native ZX order, 
+		# Note that the heightmap contains the topmost SOLID block. Grass, etc. is ignored.
+		self.heightmap = []
+		# self.biomes is a flat array of integers (0-255) in native ZX order. (i = (z * 16 + x))
+		self.biomes    = []
+		# self.blocks is deprecated: it used to refer to a BlockArray instance. 
+		# It's functionality (and all it's variables are now present in McRegionChunk)
 		self.blocks = self  # for backward compatibility
-		self.parse_blocks()
-		# self.blocks = BlockArray(self.level['Blocks'].value, self.level['Data'].value)
-	# TODO: store sections, and Blocks/Data/AddBlock in each
+		# It's number crunching time.
+		self.parse_blocks() # set self.blockdata
+	def parse_blocks(self):
+		"""Read NBT and fill self.blockdata and self.heightmap"""
+		# TODO: to be written
+		self._nbtisdirty = False
+	def update_nbt(self):
+		"""Update self.nbt based on self.blockdata and self.heightmap"""
+		# TODO: to be written
+		self._nbtisdirty = False
+	def get_nbt(self):
+		"""Update the nbt['Level']"""
+		if self._nbtisdirty:
+			self.update_nbt()
+		return self.nbt
 
