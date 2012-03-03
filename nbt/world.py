@@ -6,19 +6,30 @@ from . import chunk
 
 
 class Format(object):
+	"""world folder"""
 	# format constants
 	extension = None
 	chunkclass = chunk.Chunk
 
 class ALPHA(Format):
+	"""Alpha format world folder"""
 	pass
 
 class MCREGION(Format):
+	"""McRegion world folder"""
 	extension = 'mcr'
 	chunkclass = chunk.Chunk
 	# chunkclass = chunk.McRegionChunk  # TODO: change to McRegionChunk when done
 
+class NEWMCREGION(Format):
+	"""McRegion world folder"""
+	
+	# TODO: test class for easy debugging
+	extension = 'mcr'
+	chunkclass = chunk.McRegionChunk
+
 class ANVIL(Format):
+	"""Anvil world folder"""
 	extension = 'mca'
 	chunkclass = chunk.AnvilChunk
 
@@ -34,30 +45,21 @@ class WorldFolder(object):
 	def __init__(self, world_folder, format=None):
 		self.worldfolder = world_folder
 		self.format = format
-		os.listdir(world_folder) # Trigger OSError for non-existant directories or permission errors.
-		mcregion_fn  = list(glob.glob(os.path.join(world_folder,'region','r.*.*.mcr')))
-		anvil_fn     = list(glob.glob(os.path.join(world_folder,'region','r.*.*.mca')))
-		if self.format == None:
-			if (len(anvil_fn) > 0):
-				self.format = ANVIL
-				regionfiles = anvil_fn
-			elif (len(mcregion_fn) > 0):
-				self.format = MCREGION
-				regionfiles = mcregion_fn
-			else:
-				raise UnknownWorldFormat("Empty world or not a McRegion or Anvil format")
-		elif self.format == ANVIL:
-			if len(anvil_fn) == 0:
-				raise UnknownWorldFormat("Empty world or not a Anvil format")
-			regionfiles = anvil_fn
-		elif self.format == MCREGION:
-			if len(mcregion_fn) == 0:
-				raise UnknownWorldFormat("Empty world or not a McRegion format")
-			regionfiles = mcregion_fn
-		else:
-			raise UnknownWorldFormat("Unsupported world format")
 		self.regionfiles = {}
-		for filename in regionfiles:
+		self.regions     = {}
+		self.chunks      = None
+		# Trigger OSError for non-existant directories or permission errors.
+		# This is needed, because glob.glob silently returns no files.
+		os.listdir(world_folder)
+		filenames = None
+		if self.format == None:
+			# may raise UnknownWorldFormat
+			self.format, filenames = self.guessformat()
+		else:
+			filenames = self.get_filenames(self.format)
+			if len(filenames) == 0:
+				raise UnknownWorldFormat("Empty world or not a "+self.format.__doc__)
+		for filename in filenames:
 			m = re.match(r"r.(\-?\d+).(\-?\d+).mc[ra]", os.path.basename(filename))
 			if m:
 				x = int(m.group(1))
@@ -65,10 +67,19 @@ class WorldFolder(object):
 			else:
 				raise UnknownWorldFormat("Unrecognized filename format %s" % os.path.basename(filename))
 			self.regionfiles[(x,z)] = filename
-		self.regions     = {}
-		self.chunks      = None
 
-	def get_regionfiles():
+	def guessformat(self):
+		for format in (ANVIL, MCREGION):
+			filenames = self.get_filenames()
+			if len(filenames) > 0:
+				return format, filenames
+		raise UnknownWorldFormat("Empty world or not a McRegion or Anvil format")
+
+	def get_filenames(self, format):
+		# Warning: glob returns a empty list if the directory is unreadable, without raising an Exception
+		return list(glob.glob(os.path.join(self.worldfolder,'region','r.*.*.'+format.extension)))
+	
+	def get_regionfiles(self):
 		"""return a list of full path with region files"""
 		return self.regionfiles.values()
 	
