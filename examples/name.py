@@ -170,7 +170,7 @@ BIOMES = {
 	20: "Mountains Edge",
 	21: "Jungle",
 	22: "Jungle Hills",
-	255: "Not Yet Calculated",
+	255: "Undetermined",
 }
 
 
