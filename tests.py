@@ -1,5 +1,4 @@
-from nbt import *
-from nbt.nbt import _TAG_Numeric
+from nbt.nbt import _TAG_Numeric, MalformedFileError, NBTFile, TAGLIST
 import unittest
 from StringIO import StringIO
 from gzip import GzipFile
