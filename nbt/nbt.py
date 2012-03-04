@@ -161,6 +161,8 @@ class TAG_Int_Array(TAG, MutableSequence):
 	def _parse_buffer(self, buffer):
 		length = TAG_Int(buffer=buffer).value
 		self.update_fmt(length)
+		# TODO: do performance test comparing list and array.array
+		# (note: fmt int is 4 bytes; array int is 2 bytes. use array long instead)
 		self.value = list(unpack(self.fmt, buffer.read(self.size)))
 
 	def _render_buffer(self, buffer):
@@ -380,22 +382,26 @@ class TAG_Compound(TAG, MutableMapping):
 		elif isinstance(key, str):
 			value.name = key
 			try:
-				i = self.names[key]
+				i = self.names[key] # raise KeyError if name not in Tag_Compund yet
 				self.tag[i] = value
 			except KeyError:
-				self.names = len(self.tags)
+				self.names[name] = len(self.tags)
 				self.tags.append(value)
 		else:
 			raise ValueError("key needs to be either name of tag, or index of tag, not a %s" % type(key).__name__)
 
 	def __delitem__(self, key):
 		if isinstance(key, int):
-			self.tags = self.tags[:key] + self.tags[key:]
+			del(self.tags[key])
+			for name,i in self.names.iteritems():
+				if i == key:
+					del(self.names[name])
+					break
 		elif isinstance(key, str):
 			try:
 				i = self.names[key]
-				del(self.names[self.tags[i].name])
-				self.tags = self.tags[:i] + self.tags[i:]
+				del(self.names[key])
+				del(self.tags[i])
 			except KeyError:
 				raise KeyError("tag %s does not exist" % key)
 		else:
