@@ -349,7 +349,8 @@ class TAG_Compound(TAG, MutableMapping):
 		return len(self.tags)
 	
 	def __iter__(self):
-		return iter(self.tags)
+		for key in self.tags:
+			yield key.name
 	
 	def __contains__(self, key):
 		if isinstance(key, int):
@@ -363,8 +364,8 @@ class TAG_Compound(TAG, MutableMapping):
 			return self.tags[key]
 		elif isinstance(key, str):
 			try:
-				return self.tag[self.names[key]]
-			else:
+				return self.tags[self.names[key]]
+			except KeyError:
 				raise KeyError("tag %s does not exist" % key)
 		else:
 			raise ValueError("key needs to be either name of tag, or index of tag, not a %s" % type(key).__name__)
@@ -403,7 +404,7 @@ class TAG_Compound(TAG, MutableMapping):
 	def keys(self):
 		return [tag.name for tag in self.tags]
 	
-	def iteritems(self, key, value):
+	def iteritems(self):
 		for tag in self.tags:
 			yield (tag.name, tag)
 
