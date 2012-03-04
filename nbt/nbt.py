@@ -1,7 +1,7 @@
 from struct import pack, unpack, calcsize, error as StructError
 from gzip import GzipFile
 import zlib
-from UserDict import DictMixin
+from collections import MutableMapping, MutableSequence, Sequence
 import os, io
 
 TAG_END = 0
@@ -22,8 +22,7 @@ class MalformedFileError(Exception):
 	pass
 
 class TAG(object):
-	"""Each Tag needs to take a file-like object for reading and writing.
-	The file object will be initialised by the calling code."""
+	"""TAG, a variable with an intrinsic name"""
 	id = None
 
 	def __init__(self, value=None, name=None):
@@ -57,6 +56,7 @@ class TAG(object):
 		return "<%s(%r) at 0x%x>" % (self.__class__.__name__,self.name,id(self))
 
 class _TAG_Numeric(TAG):
+	"""_TAG_Numeric, comparable to int with an intrinsic name"""
 	def __init__(self, value=None, name=None, buffer=None):
 		super(_TAG_Numeric, self).__init__(value, name)
 		self.size = calcsize(self.fmt)
@@ -95,7 +95,8 @@ class TAG_Double(_TAG_Numeric):
 	id = TAG_DOUBLE
 	fmt = ">d"
 
-class TAG_Byte_Array(TAG):
+class TAG_Byte_Array(TAG, MutableSequence):
+	"""TAG_Byte_Array, comparable to a collections.UserList with an intrinsic name whose values must be bytes"""
 	id = TAG_BYTE_ARRAY
 	def __init__(self, name=None, buffer=None):
 		super(TAG_Byte_Array, self).__init__(name=name)
@@ -112,14 +113,39 @@ class TAG_Byte_Array(TAG):
 		length._render_buffer(buffer)
 		buffer.write(self.value)
 
+	# Mixin methods
+	def __len__(self):
+		return len(self.value)
+
+	def __iter__(self):
+		return iter(self.value)
+
+	def __contains__(self, item):
+		return item in self.value
+
+	def __getitem__(self, key):
+		return self.value[key]
+
+	def __setitem__(self, key, value):
+		# TODO: check type of value
+		self.value[key] = value
+
+	def __delitem__(self, key):
+		del(self.value[key])
+
+	def insert(self, key, value):
+		# TODO: check type of value
+		self.value.insert(key, value)
+
 	#Printing and Formatting of tree
 	def valuestr(self):
 		return "[%i byte(s)]" % len(self.value)
 	def __str__(self):
-		# return "".join(['\\x%02x'%ord(x) for x in self.value])
+		# return "'"+",".join(['0x%02x'%ord(x) for x in self.value])+"'"
 		return '['+",".join(['0x%02x'%ord(x) for x in self.value])+']'
 
-class TAG_Int_Array(TAG):
+class TAG_Int_Array(TAG, MutableSequence):
+	"""TAG_Int_Array, comparable to a collections.UserList with an intrinsic name whose values must be integers"""
 	id = TAG_INT_ARRAY
 	def __init__(self, name=None, buffer=None):
 		super(TAG_Int_Array, self).__init__(name=name)
@@ -143,12 +169,40 @@ class TAG_Int_Array(TAG):
 		TAG_Int(length)._render_buffer(buffer)
 		buffer.write(pack(self.fmt, self.value))
 
+	# Mixin methods
+	def __len__(self):
+		return len(self.value)
+
+	def __iter__(self):
+		return iter(self.value)
+
+	def __contains__(self, item):
+		return item in self.value
+
+	def __getitem__(self, key):
+		return self.value[key]
+
+	def __setitem__(self, key, value):
+		self.value[key] = value
+
+	def __delitem__(self, key, value):
+		del(self.value[key])
+
+	def insert(self, key, value):
+		self.value.insert(key, value)
+
 	#Printing and Formatting of tree
 	def valuestr(self):
 		return "[%i int(s)]" % len(self.value)
 
+	def __iter__(self):
+		return iter(self.value)
 
-class TAG_String(TAG):
+	def __len__(self):
+		return len(self.value)
+
+class TAG_String(TAG, Sequence):
+	"""TAG_String, comparable to a collections.UserString with an intrinsic name"""
 	id = TAG_STRING
 	def __init__(self, value=None, name=None, buffer=None):
 		super(TAG_String, self).__init__(value, name)
@@ -169,8 +223,23 @@ class TAG_String(TAG):
 		length._render_buffer(buffer)
 		buffer.write(save_val)
 
+	# Mixin methods
+	def __len__(self):
+		return len(self.value)
+
+	def __iter__(self):
+		return iter(self.value)
+
+	def __contains__(self, item):
+		return item in self.value
+
+	def __getitem__(self, key):
+		return self.value[key]
+
+
 #== Collection Tags ==#
-class TAG_List(TAG):
+class TAG_List(TAG, MutableSequence):
+	"""TAG_List, comparable to a collections.UserList with an intrinsic name"""
 	id = TAG_LIST
 	def __init__(self, type=None, value=None, name=None, buffer=None):
 		super(TAG_List, self).__init__(value, name)
@@ -201,11 +270,27 @@ class TAG_List(TAG):
 						 (i, tag, tag.id, self.tagID))
 			tag._render_buffer(buffer)
 
+	# Mixin methods
+	def __len__(self):
+		return len(self.tags)
+
 	def __iter__(self):
 		return iter(self.tags)
 
-	def __len__(self):
-		return len(self.tags)
+	def __contains__(self, item):
+		return item in self.tags
+
+	def __getitem__(self, key):
+		return self.tags[key]
+
+	def __setitem__(self, key, value):
+		self.tags[key] = value
+
+	def __delitem__(self, key, value):
+		del(self.tags[key])
+
+	def insert(self, key, value):
+		self.tags.insert(key, value)
 
 	#Printing and Formatting of tree
 	def valuestr(self):
@@ -221,17 +306,20 @@ class TAG_List(TAG):
 			output.append(("\t"*indent) + "}")
 		return '\n'.join(output)
 
-class TAG_Compound(TAG, DictMixin):
+class TAG_Compound(TAG, MutableMapping):
+	"""TAG_Compound, comparable to a collections.OrderedDict with an intrinsic name"""
 	id = TAG_COMPOUND
 	def __init__(self, buffer=None):
 		super(TAG_Compound, self).__init__()
 		self.tags = []
+		self.names = {} # name -> index
 		self.name = ""
 		if buffer:
 			self._parse_buffer(buffer)
 
 	#Parsers and Generators
 	def _parse_buffer(self, buffer):
+		i = 0
 		while True:
 			type = TAG_Byte(buffer=buffer)
 			if type.value == TAG_END:
@@ -244,6 +332,8 @@ class TAG_Compound(TAG, DictMixin):
 					tag = TAGLIST[type.value](buffer=buffer)
 					tag.name = name
 					self.tags.append(tag)
+					self.names[name] = i
+					i += 1
 				except KeyError:
 					raise ValueError("Unrecognised tag type")
 
@@ -254,48 +344,68 @@ class TAG_Compound(TAG, DictMixin):
 			tag._render_buffer(buffer)
 		buffer.write('\x00') #write TAG_END
 
-	# Dict compatibility.
-	# DictMixin requires at least __getitem__, and for more functionality,
-	# __setitem__, __delitem__, and keys.
+	# Mixin methods
+	def __len__(self):
+		return len(self.tags)
+	
+	def __iter__(self):
+		return iter(self.tags)
+	
+	def __contains__(self, key):
+		if isinstance(key, int):
+			return key in self.tags
+		elif isinstance(key, str):
+			return key in self.names
+		return False
 
 	def __getitem__(self, key):
 		if isinstance(key, int):
 			return self.tags[key]
 		elif isinstance(key, str):
-			for tag in self.tags:
-				if tag.name == key:
-					return tag
+			try:
+				return self.tag[self.names[key]]
 			else:
-				raise KeyError("A tag %s does not exist" % key)
+				raise KeyError("tag %s does not exist" % key)
 		else:
 			raise ValueError("key needs to be either name of tag, or index of tag, not a %s" % type(key).__name__)
 
 	def __setitem__(self, key, value):
 		if isinstance(key, int):
 			# Just try it. The proper error will be raised if it doesn't work.
+			oldname = self.tags[key].name
 			self.tags[key] = value
+			del(self.names[oldname])
+			self.names[value.name] = key
 		elif isinstance(key, str):
 			value.name = key
-			for i, tag in enumerate(self.tags):
-				if tag.name == key:
-					self.tags[i] = value
-					return
-			self.tags.append(value)
+			try:
+				i = self.names[key]
+				self.tag[i] = value
+			except KeyError:
+				self.names = len(self.tags)
+				self.tags.append(value)
+		else:
+			raise ValueError("key needs to be either name of tag, or index of tag, not a %s" % type(key).__name__)
 
 	def __delitem__(self, key):
 		if isinstance(key, int):
 			self.tags = self.tags[:key] + self.tags[key:]
 		elif isinstance(key, str):
-			for i, tag in enumerate(self.tags):
-				if tag.name == key:
-					self.tags = self.tags[:i] + self.tags[i:]
-					return
-			raise KeyError("A tag with this name does not exist")
+			try:
+				i = self.names[key]
+				del(self.names[self.tags[i].name])
+				self.tags = self.tags[:i] + self.tags[i:]
+			except KeyError:
+				raise KeyError("tag %s does not exist" % key)
 		else:
 			raise ValueError("key needs to be either name of tag, or index of tag")
 
 	def keys(self):
 		return [tag.name for tag in self.tags]
+	
+	def iteritems(self, key, value):
+		for tag in self.tags:
+			yield (tag.name, tag)
 
 	#Printing and Formatting of tree
 	def __str__(self):
