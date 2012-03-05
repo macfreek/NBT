@@ -1,6 +1,6 @@
 from nbt.nbt import _TAG_Numeric, MalformedFileError, NBTFile, TAGLIST
 import unittest
-from StringIO import StringIO
+from io import BytesIO
 from gzip import GzipFile
 import tempfile
 
@@ -11,7 +11,7 @@ class BugfixTest(unittest.TestCase):
         Opening an empty file causes an uncaught exception.
         https://github.com/twoolie/NBT/issues/issue/4
         """
-        temp = StringIO("")
+        temp = BytesIO("")
         temp.seek(0)
         self.assertRaises(MalformedFileError, NBTFile, buffer=temp)
 
@@ -36,7 +36,7 @@ class ReadWriteTest(unittest.TestCase):
     
     def testWriteBig(self):
         mynbt = NBTFile("bigtest.nbt")
-        output = StringIO()
+        output = BytesIO()
         mynbt.write_file(buffer=output)
         self.assertEqual(GzipFile("bigtest.nbt").read(), output.getvalue())
     
@@ -70,14 +70,14 @@ class EmptyStringTest(unittest.TestCase):
 
     def setUp(self):
         self.golden_value = "\x0A\0\x04Test\x08\0\x0Cempty string\0\0\0"
-        self.nbtfile = NBTFile(buffer=StringIO(self.golden_value))
+        self.nbtfile = NBTFile(buffer=BytesIO(self.golden_value))
 
     def testReadEmptyString(self):
         self.assertEqual(self.nbtfile.name, "Test")
         self.assertEqual(self.nbtfile["empty string"].value, "")
 
     def testWriteEmptyString(self):
-        buffer = StringIO()
+        buffer = BytesIO()
         self.nbtfile.write_file(buffer=buffer)
         self.assertEqual(buffer.getvalue(), self.golden_value)
 
