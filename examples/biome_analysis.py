@@ -55,7 +55,7 @@ def print_results(biome_totals):
 			biome = BIOMES[id]+" (%d)" % id
 		else:
 			biome = "Unknown (%d)" % id
-		print locale.format_string("%-25s %10d", (biome,count))
+		print(locale.format_string("%-25s %10d", (biome,count)))
 
 
 def main(world_folder):
@@ -81,11 +81,11 @@ def main(world_folder):
 
 if __name__ == '__main__':
 	if (len(sys.argv) == 1):
-		print "No world folder specified!"
+		print("No world folder specified!")
 		sys.exit(64) # EX_USAGE
 	world_folder = sys.argv[1]
 	if (not os.path.exists(world_folder)):
-		print "No such folder as "+filename
+		print("No such folder as "+filename)
 		sys.exit(72) # EX_IOERR
 	
 	sys.exit(main(world_folder))

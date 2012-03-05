@@ -44,7 +44,7 @@ def process_region_file(filename):
 	
 	# Get all chunks
 	chunks = file.get_chunks()
-	print "Parsing",os.path.basename(filename),"...",len(chunks),"chunks"
+	print("Parsing",os.path.basename(filename),"...",len(chunks),"chunks")
 	entities = []
 	for cc in chunks:
 		chunk = file.get_chunk(cc['x'], cc['z'])
@@ -58,7 +58,7 @@ def process_region_file(filename):
 def print_results(entities):
 	locale.setlocale(locale.LC_ALL, 'en_US')
 	for entity in entities:
-		print "%s at %s,%s,%s" % \
+		print("%s at %s,%s,%s" % \)
 			(entity.type,\
 			locale.format("%0.1f",entity.pos.x,grouping=True),\
 			locale.format("%0.1f",entity.pos.y,grouping=True),\
@@ -80,11 +80,11 @@ def main(world_folder):
 
 if __name__ == '__main__':
 	if (len(sys.argv) == 1):
-		print "No world folder specified!"
+		print("No world folder specified!")
 		sys.exit(64) # EX_USAGE
 	world_folder = sys.argv[1]
 	if (not os.path.exists(world_folder)):
-		print "No such folder as "+filename
+		print("No such folder as "+filename)
 		sys.exit(72) # EX_IOERR
 	
 	sys.exit(main(world_folder))

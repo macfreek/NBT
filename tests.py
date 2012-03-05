@@ -22,7 +22,7 @@ class BugfixTest(unittest.TestCase):
         """
         #open the file
         f = NBTFile("bigtest.nbt")
-        print "'" + f.filename + "'"
+        print("'" + f.filename + "'")
         f.write_file()
         # make sure it can be read again directly after
         f = NBTFile("bigtest.nbt")
