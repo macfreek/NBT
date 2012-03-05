@@ -68,7 +68,7 @@ def main(world_folder):
 	
 	try:
 		for chunk in world.iter_nbt():
-			for biomeid in unpack("256B", chunk["Level"]["Biomes"].value):
+			for biomeid in chunk["Level"]["Biomes"]:
 				biome_totals[biomeid] += 1
 
 	except KeyboardInterrupt:
