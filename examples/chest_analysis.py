@@ -74,7 +74,7 @@ def print_results(chests):
 
 
 def main(world_folder):
-	world = WorldFolder(world_folder, ANVIL)
+	world = WorldFolder(world_folder)
 	
 	try:
 		for chunk in world.iter_nbt():
