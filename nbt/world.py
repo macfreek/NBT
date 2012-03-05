@@ -70,7 +70,7 @@ class WorldFolder(object):
 
 	def guessformat(self):
 		for format in (ANVIL, MCREGION):
-			filenames = self.get_filenames()
+			filenames = self.get_filenames(format)
 			if len(filenames) > 0:
 				return format, filenames
 		raise UnknownWorldFormat("Empty world or not a McRegion or Anvil format")
