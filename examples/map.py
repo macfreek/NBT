@@ -197,9 +197,12 @@ def main(world_folder):
 		filename = os.path.basename(world_folder)+".png"
 		map.save(filename,"PNG")
 		print "Saved map as %s" % filename
+		map.show()
 	except KeyboardInterrupt:
 		print " aborted\n"
-	map.show()
+		filename = os.path.basename(world_folder)+".partial.png"
+		map.save(filename,"PNG")
+		print "Saved map as %s" % filename
 	return 0 # NOERR
 
 
