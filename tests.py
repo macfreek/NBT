@@ -27,19 +27,19 @@ class BugfixTest(unittest.TestCase):
         # make sure it can be read again directly after
         f = NBTFile("bigtest.nbt")
 
-class ReadWriteTest(unittest.TestCase):     # test that we can read the test file correctly
-
+class ReadWriteTest(unittest.TestCase):
+    """test that we can read the test file correctly"""
     def testReadBig(self):
         mynbt = NBTFile("bigtest.nbt")
         self.assertTrue(mynbt.filename != None)
         self.assertEqual(len(mynbt.tags), 11)
-
+    
     def testWriteBig(self):
         mynbt = NBTFile("bigtest.nbt")
         output = StringIO()
         mynbt.write_file(buffer=output)
         self.assertEqual(GzipFile("bigtest.nbt").read(), output.getvalue())
-
+    
     def testWriteback(self):
         mynbt = NBTFile("bigtest.nbt")
         mynbt.write_file()
