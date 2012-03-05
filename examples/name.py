@@ -27,22 +27,23 @@ class BlockType(object):
 	"""Named Block Type. Has the attributes id, data and name.
 	Attributes are read-only. Writing will give propagate among all BlockTypes, and may give 
 	unexpected results especially for the unknown blocktype."""
-	def __init__(self, id=None, data=0, name="Unknown", aliases=(), known=True):
+	def __init__(self, id=None, data=0, name="Unknown", aliases=(), solid=False, known=True):
 		self.id     = id
 		self.data   = data
 		self.name   = name
 		self.aliases= aliases
+		self.solid  = solid
 		self.known  = known
 	def __eq__(self, other):
 		return isinstance(other, BlockType) and self.id==other.id and self.data==other.data \
 				and self.name==other.name and self.known==other.known
 	def clone(self,data=None,known=True):
 		"""Clone and set self.known to false"""
-		return self.__class__(self.id, self.data if data==None else data, self.name, (), known)
+		return self.__class__(id=self.id, data=(self.data if data==None else data), name=self.name, solid=solid, known=known)
 	def __str__(self):
 		return self.name
 	def __repr__(self):
-		return "%s(%s, %s, %r, %s)" % (self.__class__.__name__, self.id, self.data, self.name, self.known)
+		return "%s(%s, %s, %r, known=%s)" % (self.__class__.__name__, self.id, self.data, self.name, self.known)
 	
 
 class _BlockFactory(UserDict):
@@ -123,18 +124,18 @@ Block(id):          returns a BlockType (may say "Unknown")
 Block.byName(name): returns a BlockType (id may be None if unknown)
 """
 Block = _BlockFactory(
-	BlockType(0,    0,    "Air"),
-	BlockType(1,    0,    "Stone"),
-	BlockType(2,    0,    "Grass Block", ("Grass", )),
-	BlockType(3,    0,    "Dirt"),
-	BlockType(4,    0,    "Cobblestone", ("Stonebrick", "Cobble stone", "Stone brick", )),
-	BlockType(5,    0,    "Wooden Planks", ("Planks", "Wood", )),
-	BlockType(6,    None, "Sapling"),
-	BlockType(6,    0,    "Oak Sapling"),
-	BlockType(6,    1,    "Spruce Sapling"),
-	BlockType(6,    2,    "Birch Sapling"),
-	BlockType(6,    3,    "Jungle Oak Sapling"),
-	BlockType(17,   0,    "Wood", ("Log", )),
+	BlockType(0,    0,    "Air", solid=False),
+	BlockType(1,    0,    "Stone", solid=True),
+	BlockType(2,    0,    "Grass Block", aliases=("Grass", ), solid=True),
+	BlockType(3,    0,    "Dirt", solid=True),
+	BlockType(4,    0,    "Cobblestone", aliases=("Stonebrick", "Cobble stone", "Stone brick", ), solid=True),
+	BlockType(5,    0,    "Wooden Planks", aliases=("Planks", "Wood", ), solid=True),
+	BlockType(6,    None, "Sapling", solid=False),
+	BlockType(6,    0,    "Oak Sapling", solid=False),
+	BlockType(6,    1,    "Spruce Sapling", solid=False),
+	BlockType(6,    2,    "Birch Sapling", solid=False),
+	BlockType(6,    3,    "Jungle Oak Sapling", solid=False),
+	BlockType(17,   0,    "Wood", aliases=("Log", ), solid=True),
 )
 
 
