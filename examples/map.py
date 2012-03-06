@@ -146,7 +146,7 @@ def hsl_slide(hsl1, hsl2, ratio):
 	avg_l = hsl1['l'] + ratio*(hsl2['l']-hsl1['l'])
 	avg_h = math.degrees(avg_h)
 	
-	#print('tint:',tint, 'base:',final_color, 'avg:',avg_h,avg_s,avg_l)
+	#print('tint: %s base: %s avg: %s %s %s' % (tint,final_color,avg_h,avg_s,avg_l))
 	return {'h':avg_h, 's':avg_s, 'l':avg_l}
 
 

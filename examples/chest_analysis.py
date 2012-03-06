@@ -42,7 +42,7 @@ def items_from_nbt(nbtlist):
 def chests_per_chunk(chunk):
 	"""Given a chunk, increment the block types with the number of blocks found"""
 	# if (len(chunk['Entities']) > 0) or (len(chunk['TileEntities']) > 0):
-	#	print("Chunk ", chunk["xPos"],chunk["zPos"])
+	#	print("Chunk %d,%d" % (chunk["xPos"],chunk["zPos"]))
 	entities = []
 	for entity in chunk['Entities']:
 		if entity["id"].value == "Minecart" and entity["type"].value == 1:
@@ -63,12 +63,12 @@ def print_results(chests):
 	locale.setlocale(locale.LC_ALL, 'en_US')
 	for chest in chests:
 		itemcount = sum(chest.items.values())
-		print("%s at %s,%s,%s with %d items:" % \)
+		print("%s at %s,%s,%s with %d items:" % \
 			(chest.type,\
 			locale.format("%0.1f",chest.pos.x,grouping=True),\
 			locale.format("%0.1f",chest.pos.y,grouping=True),\
 			locale.format("%0.1f",chest.pos.z,grouping=True),\
-			itemcount)
+			itemcount))
 		for blockid,count in chest.items.items():
 			print("   %3dx Item %d" % (count, blockid))
 
