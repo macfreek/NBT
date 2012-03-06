@@ -1,8 +1,10 @@
+#!/usr/bin/env python
+
 from nbt.nbt import _TAG_Numeric, MalformedFileError, NBTFile, TAGLIST
-import unittest
+import sys,os,unittest
+import tempfile, shutil
 from io import BytesIO
 from gzip import GzipFile
-import tempfile
 
 class BugfixTest(unittest.TestCase):
     """Bugfix regression tests."""
@@ -20,29 +22,50 @@ class BugfixTest(unittest.TestCase):
         test that files opened from a file name are closed after 
         being written to. i.e. will read correctly in the future
         """
+        # copy the file (don't work on the original test file)
+        tempdir = tempfile.mkdtemp()
+        filename = os.path.join(tempdir, 'bigtest.nbt')
+        shutil.copy('bigtest.nbt', filename)
+        
         #open the file
-        f = NBTFile("bigtest.nbt")
-        fn = "'" + f.filename + "'"
-        # print(fn)
+        f = NBTFile(filename)
         f.write_file()
         # make sure it can be read again directly after
-        f = NBTFile("bigtest.nbt")
+        f = NBTFile(filename)
+        
+        # remove the temporary file
+        try:
+            shutil.rmtree(self.tempdir)
+        except OSError as e:
+            raise
 
 class ReadWriteTest(unittest.TestCase):
     """test that we can read the test file correctly"""
+
+    def setUp(self):
+        self.tempdir = tempfile.mkdtemp()
+        self.filename = os.path.join(self.tempdir, 'bigtest.nbt')
+        shutil.copy('bigtest.nbt', self.filename)
+
+    def tearDown(self):
+        try:
+            shutil.rmtree(self.tempdir)
+        except OSError as e:
+            raise
+    
     def testReadBig(self):
-        mynbt = NBTFile("bigtest.nbt")
+        mynbt = NBTFile(self.filename)
         self.assertTrue(mynbt.filename != None)
         self.assertEqual(len(mynbt.tags), 11)
     
     def testWriteBig(self):
-        mynbt = NBTFile("bigtest.nbt")
+        mynbt = NBTFile(self.filename)
         output = BytesIO()
         mynbt.write_file(buffer=output)
         self.assertEqual(GzipFile("bigtest.nbt").read(), output.getvalue())
     
     def testWriteback(self):
-        mynbt = NBTFile("bigtest.nbt")
+        mynbt = NBTFile(self.filename)
         mynbt.write_file()
 
 class TreeManipulationTest(unittest.TestCase):
