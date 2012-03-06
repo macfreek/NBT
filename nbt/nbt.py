@@ -8,7 +8,7 @@ import os, io
 
 try:
 	unicode
-except NameErorr:
+except NameError:
 	unicode = str  # compatibility for Python 3
 
 
@@ -78,6 +78,7 @@ class _TAG_Numeric(TAG):
 
 	#Parsers and Generators
 	def _parse_buffer(self, buffer):
+		# Note: buffer.read() may raise an IOError, for example if buffer is a corrupt gzip.GzipFile 
 		self.value = unpack(self.fmt, buffer.read(self.size))[0]
 
 	def _render_buffer(self, buffer):
@@ -357,7 +358,7 @@ class TAG_Compound(TAG, MutableMapping):
 			TAG_Byte(tag.id)._render_buffer(buffer)
 			TAG_String(tag.name)._render_buffer(buffer)
 			tag._render_buffer(buffer)
-		buffer.write('\x00') #write TAG_END
+		buffer.write(b'\x00') #write TAG_END
 
 	# Mixin methods
 	def __len__(self):

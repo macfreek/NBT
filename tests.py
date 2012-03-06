@@ -11,7 +11,7 @@ class BugfixTest(unittest.TestCase):
         Opening an empty file causes an uncaught exception.
         https://github.com/twoolie/NBT/issues/issue/4
         """
-        temp = BytesIO("")
+        temp = BytesIO(b"")
         temp.seek(0)
         self.assertRaises(MalformedFileError, NBTFile, buffer=temp)
 
@@ -22,7 +22,8 @@ class BugfixTest(unittest.TestCase):
         """
         #open the file
         f = NBTFile("bigtest.nbt")
-        print("'" + f.filename + "'")
+        fn = "'" + f.filename + "'"
+        # print(fn)
         f.write_file()
         # make sure it can be read again directly after
         f = NBTFile("bigtest.nbt")
@@ -69,7 +70,7 @@ class TreeManipulationTest(unittest.TestCase):
 class EmptyStringTest(unittest.TestCase):
 
     def setUp(self):
-        self.golden_value = "\x0A\0\x04Test\x08\0\x0Cempty string\0\0\0"
+        self.golden_value = b"\x0A\0\x04Test\x08\0\x0Cempty string\0\0\0"
         self.nbtfile = NBTFile(buffer=BytesIO(self.golden_value))
 
     def testReadEmptyString(self):

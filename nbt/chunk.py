@@ -136,12 +136,12 @@ class BlockArray(object):
 		self.blocksList[offset] = id
 		if (offset % 2 == 1):
 			# offset is odd
-			index = (offset-1)/2
+			index = (offset-1)//2
 			b = self.dataList[index]
 			self.dataList[index] = (b & 240) + (data & 15) # modify lower bits, leaving higher bits in place
 		else:
 			# offset is even
-			index = offset/2
+			index = offset//2
 			b = self.dataList[index]
 			self.dataList[index] = (b & 15) + (data << 4 & 240) # modify ligher bits, leaving lower bits in place
 
@@ -169,12 +169,12 @@ class BlockArray(object):
 		# NOT to the MOST significant bits, as you might expected.
 		if (offset % 2 == 1):
 			# offset is odd
-			index = (offset-1)/2
+			index = (offset-1)//2
 			b = self.dataList[index]
 			return b & 15 # Get little (last 4 bits) end of byte
 		else:
 			# offset is even
-			index = offset/2
+			index = offset//2
 			b = self.dataList[index]
 			return (b >> 4) & 15 # Get big end (first 4 bits) of byte
 
@@ -509,12 +509,12 @@ class McRegionChunk(BaseChunk):
 		self.blocksList[offset] = id
 		if (offset % 2 == 1):
 			# offset is odd
-			index = (offset-1)/2
+			index = (offset-1)//2
 			b = self.dataList[index]
 			self.dataList[index] = (b & 240) + (data & 15) # modify lower bits, leaving higher bits in place
 		else:
 			# offset is even
-			index = offset/2
+			index = offset//2
 			b = self.dataList[index]
 			self.dataList[index] = (b & 15) + (data << 4 & 240) # modify ligher bits, leaving lower bits in place
 
@@ -542,12 +542,12 @@ class McRegionChunk(BaseChunk):
 		# NOT to the MOST significant bits, as you might expected.
 		if (offset % 2 == 1):
 			# offset is odd
-			index = (offset-1)/2
+			index = (offset-1)//2
 			b = self.dataList[index]
 			return b & 15 # Get little (last 4 bits) end of byte
 		else:
 			# offset is even
-			index = offset/2
+			index = offset//2
 			b = self.dataList[index]
 			return (b >> 4) & 15 # Get big end (first 4 bits) of byte
 
