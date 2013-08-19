@@ -34,7 +34,15 @@ class MalformedFileError(Exception):
 	pass
 
 class TAG(object):
-	"""TAG, a variable with an intrinsic name."""
+	"""
+	A variable with an intrinsic name and binary representation.
+	The binary representation is defined by the Named Binary Tag (NBT) format.
+	
+	Starting with NBT version 2, the order of the parameters will change to:
+	TAG(name, value) instead of TAG(value, name).
+	It is recommend to use the named parameters to ensure forward compatibility:
+	TAG(name=name, value=value).
+	"""
 	id = None
 
 	def __init__(self, value=None, name=None):
@@ -43,9 +51,17 @@ class TAG(object):
 
 	#Parsers and Generators
 	def _parse_buffer(self, buffer):
+		"""
+		Parse a binary format of the (unnamed) Tag by reading the buffer stream.
+		Note that this only parses the payload, not the header (type and name).
+		"""
 		raise NotImplementedError(self.__class__.__name__)
 
 	def _render_buffer(self, buffer):
+		"""
+		Write the binary format of the (unnamed) Tag to the buffer stream.
+		Note that this only returns the payload, not the header (type and name).
+		"""
 		raise NotImplementedError(self.__class__.__name__)
 
 	#Printing and Formatting of tree
@@ -78,8 +94,15 @@ class TAG(object):
 		return "<%s(%r) at 0x%x>" % (self.__class__.__name__,self.name,id(self))
 
 class _TAG_Numeric(TAG):
-	"""_TAG_Numeric, comparable to int with an intrinsic name"""
-	def __init__(self, value=None, name=None, buffer=None):
+	"""
+	A numberic value with an intrinsic name and binary representation.
+
+	Starting with NBT version 2, the order of the parameters will change to:
+	_TAG_Numeric(name, value) instead of _TAG_Numeric(value, name).
+	It is recommend to use the named parameters to ensure forward compatibility:
+	_TAG_Numeric(name=name, value=value).
+	"""
+	def __init__(self, value=0, name=None, buffer=None):
 		super(_TAG_Numeric, self).__init__(value, name)
 		if buffer:
 			self._parse_buffer(buffer)
@@ -94,28 +117,30 @@ class _TAG_Numeric(TAG):
 
 #== Value Tags ==#
 class TAG_Byte(_TAG_Numeric):
-	"""Represent a single tag storing 1 byte."""
+	"""
+	A single byte with an intrinsic name and binary representation.
+	"""
 	id = TAG_BYTE
 	fmt = Struct(">b")
 
 class TAG_Short(_TAG_Numeric):
-	"""Represent a single tag storing 1 short."""
+	"""Represent a single tag storing 1 short (16-bits signed integer)."""
 	id = TAG_SHORT
 	fmt = Struct(">h")
 
 class TAG_Int(_TAG_Numeric):
-	"""Represent a single tag storing 1 int."""
+	"""Represent a single tag storing 1 int (32-bits signed integer, big-endian)."""
 	id = TAG_INT
 	fmt = Struct(">i")
 	"""Struct(">i"), 32-bits integer, big-endian"""
 
 class TAG_Long(_TAG_Numeric):
-	"""Represent a single tag storing 1 long."""
+	"""A single tag storing 1 long (64-bits signed integer, big-endian)."""
 	id = TAG_LONG
 	fmt = Struct(">q")
 
 class TAG_Float(_TAG_Numeric):
-	"""Represent a single tag storing 1 IEEE-754 floating point number."""
+	"""A single tag storing 1 IEEE-754 floating point number."""
 	id = TAG_FLOAT
 	fmt = Struct(">f")
 
@@ -126,12 +151,15 @@ class TAG_Double(_TAG_Numeric):
 
 class TAG_Byte_Array(TAG, MutableSequence):
 	"""
+	A List with an intrinsic name, and equal typed variables.
 	TAG_Byte_Array, comparable to a collections.UserList with
 	an intrinsic name whose values must be bytes
 	"""
 	id = TAG_BYTE_ARRAY
-	def __init__(self, name=None, buffer=None):
-		super(TAG_Byte_Array, self).__init__(name=name)
+	def __init__(self, name=None, buffer=None, value=None):
+		if value == None:
+			value = bytearray()
+		super(TAG_Byte_Array, self).__init__(value, name)
 		if buffer:
 			self._parse_buffer(buffer)
 
@@ -184,8 +212,10 @@ class TAG_Int_Array(TAG, MutableSequence):
 	an intrinsic name whose values must be integers
 	"""
 	id = TAG_INT_ARRAY
-	def __init__(self, name=None, buffer=None):
-		super(TAG_Int_Array, self).__init__(name=name)
+	def __init__(self, name=None, buffer=None, value=None):
+		if value == None:
+			value = []
+		super(TAG_Int_Array, self).__init__(value, name)
 		if buffer:
 			self._parse_buffer(buffer)
 
@@ -238,7 +268,7 @@ class TAG_String(TAG, Sequence):
 	intrinsic name
 	"""
 	id = TAG_STRING
-	def __init__(self, value=None, name=None, buffer=None):
+	def __init__(self, value="", name=None, buffer=None):
 		super(TAG_String, self).__init__(value, name)
 		if buffer:
 			self._parse_buffer(buffer)
@@ -281,6 +311,8 @@ class TAG_List(TAG, MutableSequence):
 	"""
 	id = TAG_LIST
 	def __init__(self, type=None, value=None, name=None, buffer=None):
+		if value == None:
+			value = []
 		super(TAG_List, self).__init__(value, name)
 		if type:
 			self.tagID = type.id
@@ -357,9 +389,11 @@ class TAG_Compound(TAG, MutableMapping):
 	intrinsic name
 	"""
 	id = TAG_COMPOUND
-	def __init__(self, buffer=None):
-		super(TAG_Compound, self).__init__()
-		self.tags = []
+	def __init__(self, buffer=None, name=None, value=None):
+		if value == None:
+			value = []
+		super(TAG_Compound, self).__init__(name=name)
+		self.tags = value
 		self.name = ""
 		if buffer:
 			self._parse_buffer(buffer)
@@ -373,12 +407,19 @@ class TAG_Compound(TAG, MutableMapping):
 				break
 			else:
 				name = TAG_String(buffer=buffer).value
+                err = False
 				try:
 					tag = TAGLIST[type.value](buffer=buffer)
 					tag.name = name
 					self.tags.append(tag)
 				except KeyError:
-					raise ValueError("Unrecognised tag type")
+					# Remove context to suppress the error "During handling of the above 
+					# exception, another exception occurred" in Pyhton 3.3 and up. See PEP 415.
+					# In Python 3.3 use: 'raise ValueError("Unrecognised tag type") from None' here
+					err = True
+				finally:
+					if err:
+						raise ValueError("Unrecognised tag type")
 
 	def _render_buffer(self, buffer):
 		for tag in self.tags:
@@ -446,6 +487,12 @@ class TAG_Compound(TAG, MutableMapping):
 	def iteritems(self):
 		for tag in self.tags:
 			yield (tag.name, tag)
+	
+	#TODO: all sorts of list methods (append, extend, ..):
+	def append(self, value):
+		if value.name in self:
+			raise ValueError("Tag %s already exists in TAG_Compound")
+		self.tags.append(value) 
 
 	#Printing and Formatting of tree
 	def __unicode__(self):
@@ -524,7 +571,11 @@ class NBTFile(TAG_Compound):
 				else:
 					raise MalformedFileError("First record is not a Compound Tag")
 			except StructError as e:
-				raise MalformedFileError("Partial File Parse: file possibly truncated.")
+				# Remove context to suppress the error "During handling of the above 
+				# exception, another exception occurred" in Pyhton 3.3 and up. See PEP 415.
+				exception = MalformedFileError("Partial File Parse: file possibly truncated.")
+				exception.__cause__ = None
+				raise exception
 		else:
 			raise ValueError("NBTFile.parse_file(): Need to specify either a filename or a file object")
 
