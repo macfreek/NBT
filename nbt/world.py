@@ -71,11 +71,11 @@ class _BaseWorldFolder(object):
         """Get a region using x,z coordinates of a region. Cache results."""
         if (x,z) not in self.regions:
             if (x,z) in self.regionfiles:
-                self.regions[(x,z)] = region.RegionFile(self.regionfiles[(x,z)])
+                self.regions[(x,z)] = region.RegionFile(self.regionfiles[(x,z)], x=x, z=z)
             else:
                 # Return an empty RegionFile object
                 # TODO: this does not yet allow for saving of the region file
-                self.regions[(x,z)] = region.RegionFile()
+                self.regions[(x,z)] = region.RegionFile(x=x, z=z)
         return self.regions[(x,z)]
 
     def iter_regions(self):
@@ -252,11 +252,16 @@ class BoundingBox(object):
             if self.maxz is None or z > self.maxz:
                 self.maxz = z
     def lenx(self):
-        return self.maxx-self.minx+1
+        return self.maxx-self.minx+1 if self.minx else 0
     def leny(self):
-        return self.maxy-self.miny+1
+        return self.maxy-self.miny+1 if self.miny else 0
     def lenz(self):
-        return self.maxz-self.minz+1
+        return self.maxz-self.minz+1 if self.minz else 0
+    def __contains__(self, coord):
+        x, y, z = coord
+        return  (x is None or (self.minx < x and x < self.maxx)) and \
+                (y is None or (self.miny < y and y < self.maxy)) and \
+                (z is None or (self.minz < z and z < self.maxz))
     def __repr__(self):
         return "%s(%s,%s,%s,%s,%s,%s)" % (self.__class__.__name__,self.minx,self.maxx,
                 self.miny,self.maxy,self.minz,self.maxz)
