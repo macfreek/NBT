@@ -23,7 +23,7 @@ try:
     from PIL import Image
 except ImportError:
     # PIL not in search path. Let's see if it can be found in the parent folder
-    sys.stderr.write("Module PIL/Image not found. Pillow (a PIL fork) can be found at http://python-imaging.github.io/\n")
+    sys.stderr.write("Module PIL/Image not found. Pillow (a PIL fork) can be found at http://python-pillow.org/\n")
     # Note: it may also be possible that PIL is installed, but JPEG support is disabled or broken
     sys.exit(70) # EX_SOFTWARE
 
@@ -177,6 +177,8 @@ def hsl2rgb(H,S,L):
 
 def main(world_folder, show=True):
     world = McRegionWorldFolder(world_folder)  # map still only supports McRegion maps
+    if not world.nonempty():
+        raise NotImplementedError("The specified world does not contain any McRegion files. This script does not support current Anvil worlds.")
     bb = world.get_boundingbox()
     map = Image.new('RGB', (16*bb.lenx(),16*bb.lenz()))
     t = world.chunk_count()
