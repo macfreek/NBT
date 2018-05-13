@@ -1,0 +1,402 @@
+Tests
+=====
+General:
+- Add pep8, pychecker and pyflakes tests?
+  pychecker is flaky with relative imports
+  - possible to suppress pychecker, pyflakes warnings/errors?
+- Makefile for
+  * creating documentation (wikidoc, htmldoc, textdoc)
+  * Check code warnings/errors (pychecker, pyflakes, pep8)
+  * run travis tests locally
+- cd doc; make linkcheck; make doctest
+nbt.nbt:
+- https://github.com/twoolie/NBT/issues/70#issuecomment-24105062
+
+Add coverall (checks if all code is covered by unit tests): https://coveralls.io/r/macfreek/NBT/
+
+
+Write test case: file wrapper. raise error if read or write exceeds file size.
+
+
+
+Test read/write methods for opening region files
+* with filename (should open AND close the file after reading, and after writing)
+* with fileobj  (should NOT close the file after reading, nor after writing)
+- test 1: open with filename, delete object
+- test 2: open with file object, delete object
+
+Test read/write methods for opening NBT files
+* with filename (should open AND close the file after reading, and after writing)
+* with buffer   ()
+* with fileobj  (should )
+
+
+
+
+
+New version:
+* MANIFEST.in
+* nbt.__init__.VERSION
+* doc/changelog.rst
+
+
+Version 1.4: write region files
+Version 1.5: change tab to spaces
+             mark functions as deprecated for 2.x
+
+
+
+
+Add from feature import unicode_strings in nbt.nbt and possible elsewhere
+
+Features in worldfolder:
+- get_level_data() / get_metadata() method in WorldFolder
+  returns NBTFile object for level.dat (also if McRegionWorld is requested, for a mixed McRegion/AnvilWorld folder.)
+- set_level_data() / set_metadata()
+- functions to get metadata specifics: name, last played...
+- class to get all MineCraft worldfolders (platform-specific)
+
+* API change:
+  (make issue, and ask for API. If a current function is changed, note it's intention in the changelog)
+  - region: get_chunks -> get_chunk_coords
+  - region: iter_chunks -> get_nbts
+  - region: get_timestamp returns a time.datetime object. raise exception is timestamp is 0?
+  - region. NBTFile.write_chunk() may take a NBTFile or simply any TAG, like a TAG_Compound.
+  - region: add __enter__ and __exit__ methods.
+  - world:  iter_chunks -> get_chunks
+  - world:  iter_regions -> get_regions
+  - nbt: consistent nbt.TAG* init parameters
+  - nbt: NBTFile.parse_file() (and write_file()?) no longer has filename/fileobj/buffer.
+  - nbt: TAG add __bytes__() method and get rid of _render_buffer()
+  - nbt: get rid of _parse_buffer(), but use from_buffer().
+  - TODO: also a bytes that includes the name?
+  - nbt: create TAG_* functions without name and Named_* functions with name.
+  - nbt: TAG_*.__init__(value=0) & TAG_*.from_buffer(buffer) & TAG_*.from_bytes(data)
+  - nbt: Named_*.__init__(name=u"", value=0) & Named_*.from_buffer(buffer) & Named_*.from_bytes(data)
+  - nbt: TAG_* and Named_*: .from_buffer(buffer) and .from_bytes(data). unpack / _parse_buffer methods.
+  - nbt: TAG_* and Named_*: .to_buffer(buffer) and .to_bytes(data). pack / _render_buffer methods
+  - nbt: TAG.from_bytes(), Named.from_bytes(), TAG.from_buffer(), Named.from_buffer() return the correct subclass.
+  - nbt: .__bytes__() is equivalent to .to_bytes()
+  - nbt: read-only support for data with a 4-byte Unicode name.
+
+Documentatie:
+* Help documentation (<Struct object at 0x1031101b8> -> Struct('>i'))  
+	In nbt.nbt:
+	class _Struct(Struct):
+		def __str__(self):
+			return ...
+		def __repr__(self):
+			return ...
+* controleer documentatie van constants in nbt.region (ziet de output er goed uit, worden contant namen gebruikt bij compression variablen ipv waardes)
+* URL naar Travic CI lijkt niet door te komen in RST output files. (is dit een fout in de markup of in sphinxcontrib-restbuilder?)
+  (is gefixt?, maar niet gereleased!)
+
+
+Update documentation:
+* Fix warnings: 
+  sphinx-build -b rst -d build/doctree  -c . -a -E . ../../NBT.wiki
+* Add page on how to build/create documentation.
+  - Makefile
+  - python.inv
+  - sphinxext/restbuilder.py
+  - conf.py  
+  - genindex, modindex and search page are not generated
+* Add sbliven (Spencer Bliven) as contributor
+
+Update changelog:
+incompatible changes:
+* The default value for Numeric tags is now 0 instead None. The default value
+  for TAG_String is now "" instead of None. This makes named tags more similar
+  to native Python objects (e.g. int() also returns 0).
+
+
+Create tests to read compressed and uncompressed files, next to region files:
+• Chunks are stored in compressed NBT format within Region files.
+• level.dat is stored in compressed NBT format.
+• <player>.dat files are stored in compressed NBT format.
+• villages.dat is stored in compressed NBT format.
+• map_<#>.dat files are stored in compressed NBT format.
+• scoreboard.dat is stored in compressed NBT format.
+• idcounts.dat is stored in uncompressed NBT format.
+• servers.dat, which is used to store the list of saved multiplayer servers as uncompressed NBT.
+
+
+
+class hierarchy:
+	TAG (= named object, with binary representation)
+	+- TAG_Compound (= named dict, with binary representation)
+	   +- McRegionChunk
+	   +- AnvilChunk
+
+	Chunk
+	+- McRegionChunk
+	+- AnvilChunk
+
+	NBTStream - wrapper around any TAG, representing an uncompressed NBT data stream
+	NBTFile - GzipFile wrapping around a NBTStream
+	RegionFile - wrapper around multiple NBTStreams
+
+Documentation:
+* Are there suggestions what to include in the git repository and/or setuptools distribution? The .rst to html works fine, but .rst alone is not helpful. Should we include the html, or simply say in the README that users can generate documentation with
+    cd doc
+    make html
+    make text
+* Update readme.txt and readme.md
+* Add developer guidelines:
+  - style guidelines -- tabs instead of spaces; otherwise as PEP 0008
+  - Add docstrings: (unknown: init description in __init__ or class docstring?)
+  - Add _ before "private" methods. This is not done consistently now.
+  - unittests
+  - commit often. pull request often
+
+Documentation: glossary
+- chunk
+- section(?) = block(?)
+- world (folder)
+- region (file)
+- undefined ("inconceived") chunks and sections
+
+
+
+Fixes in nbt.nbt:
+- keys in NBT compound MUST be Unicode. Check this.
+- more specific error messages
+- Tags in a TAG_List must not be named according to the spec.
+- Add initial value to nbt.TAG_Byte_Array and nbt.TAG_Byte_Array, TAG_String, etc.
+- Allow: 
+  >>> a = TAG_String("123")
+  >>> a += "4"
+  >>> print(a)
+  TAG_String("1234")
+  >>> a.startswith("12")
+  True
+  (extend Tag_String as string.UserString?)
+- nbt: Test unicode characters in the Tag name.
+    # In case of problems with `str(value)`
+    # Some Python libraries use: `'%s' % (value,)`
+	# Also test for 4-byte unicode characters, such as emoticons. This generally fails.
+
+- nbt.nbt: read & write a TAG_List of 3 TAG_Ends.
+
+
+Hoe zit een Minecraft NBT er uit?
+Het is een Unnamed_Tag_Compound met daarin een Named_Tag_Compound('Level')
+
+
+API changes
+#43 new chunk API
+#48 NBTFile has-a TAG_Compound instead of is-a TAG_Compound (do we need a NBTfile class anyway?)
+	Remove duplicate code in __init__() and parse_file()
+	Perhaps seperate set_file() with arguments and parse_file() without arguments
+	Should an empty NBTFile() be allowed (without buffer, filename, fileobj)
+	Should be keep all 3 options: buffer, filename, fileobj?
+	The UNIX-way it create an easy wrapper.
+	Also: store filename from fileobj.name, if available.
+	Check for closed files, in particular when init, parse_file AND write_file are all given a different filename.
+	file seems closes twice if __init__ calls parse_file()
+#48 Why does nbt use GZip, while region uses zlib?
+
+Mayor new functionality
+#44 multiprocessing callback iterator in WoldFolder
+#45 block database -> reject
+
+
+#38 automatically generated documentation
+
+
+Implement bounding box for WorldFolder.
+
+More tests
+
+#42 Bug in finding more space for chunk while writing region file
+
+
+
+
+
+.tag_info()
+TAG_Byte_Array('Data'): [16384 byte(s)], 
+TAG_List('TileTicks'): [131 TAG_Compound(s)], 
+TAG_List('Entities'): [0 TAG_Byte(s)], 
+TAG_Long('LastUpdate'): 3241, 
+TAG_Int('xPos'): 6, 
+TAG_Int('zPos'): 33, 
+TAG_List('TileEntities'): [0 TAG_Byte(s)], 
+TAG_Byte('TerrainPopulated'): 0, 
+TAG_Byte_Array('SkyLight'): [16384 byte(s)], 
+TAG_Byte_Array('HeightMap'): [256 byte(s)], 
+TAG_Byte_Array('BlockLight'): [16384 byte(s)], 
+TAG_Byte_Array('Blocks'): [32768 byte(s)],
+TAG_Compound('name'): {3 entrie(s)}
+
+repr()
+<TAG_Byte_Array('Data') at 0x10f8176d0>, 
+131 entries of type TAG_Compound, 
+0 entries of type TAG_Byte, 
+<TAG_Long('LastUpdate') at 0x10f817810>, 
+<TAG_Int('xPos') at 0x10f8fd150>, 
+<TAG_Int('zPos') at 0x10f8fd090>, 
+0 entries of type TAG_Byte, 
+<TAG_Byte('TerrainPopulated') at 0x10f8fd1d0>, 
+<TAG_Byte_Array('SkyLight') at 0x10f8fd250>, 
+<TAG_Byte_Array('HeightMap') at 0x10f8fd290>, 
+<TAG_Byte_Array('BlockLight') at 0x10f8fd210>, 
+<TAG_Byte_Array('Blocks') at 0x10f8fd2d0>,
+<TAG_Compound('name') at 0x10f8fd2d0>
+
+Both should be:
+<TAG_Byte_Array('Data', [ .. 16384 byte(s) .. ]>, 
+<TAG_List('TileTicks', TAG_Compound, [ .. 131 entries .. ])>, 
+TAG_List('Entities', TAG_Byte, []), 
+TAG_Long('LastUpdate', 3241), 
+TAG_Int('xPos', 6), 
+TAG_Int('zPos', 33), 
+TAG_List('TileEntities', TAG_Byte, []), 
+TAG_Byte('TerrainPopulated', 0), 
+<TAG_Byte_Array('SkyLight', [ .. 16384 byte(s) .. ])>, 
+<TAG_Byte_Array('HeightMap', [ .. 256 byte(s) .. ])>, 
+<TAG_Byte_Array('BlockLight', [ .. 16384 byte(s) .. ])>, 
+<TAG_Byte_Array('Blocks', [ .. 32768 byte(s) .. ])>,
+<TAG_Compound('name', [ .. 3 entries .. ])>
+
+str should remains as-is
+
+.pretty_tree() is:
+TAG_Compound("Level"): 11 entries
+{
+   TAG_Short("shortTest"): 32767
+   TAG_Long("longTest"): 9223372036854775807
+   TAG_Float("floatTest"): 0.49823147
+   TAG_String("stringTest"): HELLO WORLD THIS IS A TEST STRING ÅÄÖ!
+   TAG_Int("intTest"): 2147483647
+   TAG_Compound("nested compound test"): 2 entries
+   {
+      TAG_Compound("ham"): 2 entries
+      {
+         TAG_String("name"): Hampus
+         TAG_Float("value"): 0.75
+      }
+      TAG_Compound("egg"): 2 entries
+      {
+         TAG_String("name"): Eggbert
+         TAG_Float("value"): 0.5
+      }
+   }
+   TAG_List("listTest (long)"): 5 entries of type TAG_Long
+   {
+      TAG_Long: 11
+      TAG_Long: 12
+      TAG_Long: 13
+      TAG_Long: 14
+      TAG_Long: 15
+   }
+   TAG_Byte("byteTest"): 127
+   TAG_List("listTest (compound)"): 2 entries of type TAG_Compound
+   {
+      TAG_Compound: 2 entries
+      {
+         TAG_String("name"): Compound tag #0
+         TAG_Long("created-on"): 1264099775885
+      }
+      TAG_Compound: 2 entries
+      {
+         TAG_String("name"): Compound tag #1
+         TAG_Long("created-on"): 1264099775885
+      }
+   }
+   TAG_Byte_Array("byteArrayTest (the first 1000 values of (n*n*255+n*7)%100, starting with n=0 (0, 62, 34, 16, 8, ...))"): [1000 bytes]
+   TAG_Double("doubleTest"): 0.4931287132182315
+}
+
+.pretty_tree() should be:
+TAG_Compound("Level", 
+[
+   TAG_Short("shortTest", 32767),
+   TAG_Long("longTest", 9223372036854775807),
+   TAG_Float("floatTest", 0.49823147),
+   TAG_String("stringTest", "HELLO WORLD THIS IS A TEST STRING ÅÄÖ!"),
+   TAG_Int("intTest", 2147483647),
+   TAG_Compound("nested compound test", 
+   [
+      TAG_Compound("ham",
+      [
+         TAG_String("name", "Hampus"),
+         TAG_Float("value", 0.75)
+      ]),
+      TAG_Compound("egg",
+      [
+         TAG_String("name", "Eggbert"),
+         TAG_Float("value", 0.5)
+      ])
+   ]),
+   TAG_List("listTest (long)", TAG_Long, 
+   [
+      TAG_Long("", 11),
+      TAG_Long("", 12),
+      TAG_Long("", 13),
+      TAG_Long("", 14),
+      TAG_Long("", 15)
+   ]),
+   TAG_Byte("byteTest", 127),
+   TAG_List("listTest (compound)", TAG_Compound, 
+   [
+      TAG_Compound("", 
+      [
+         TAG_String("name", "Compound tag #0"),
+         TAG_Long("created-on", 1264099775885)
+      ]),
+      TAG_Compound("",
+      [
+         TAG_String("name", "Compound tag #1"),
+         TAG_Long("created-on", 1264099775885)
+      ])
+   ]),
+   TAG_Byte_Array("byteArrayTest (the first 1000 values of (n*n*255+n*7)%100, starting with n=0 (0, 62, 34, 16, 8, ...))", [ .. 1000 bytes .. ]),
+   TAG_Double("doubleTest", 0.4931287132182315)
+])
+
+
+
+
+
+
+https://github.com/d0sboots/Minecraft - diamond analysis (makes new example)
+
+https://github.com/MidnightLightning/NBT/tree/mapbuilder - misc changes
+
+https://github.com/kitlaan/NBT/commits/master/ - 3 commits, nothing new
+
+5b4380d015625f275b653191a2c37152e41d6952	ct	ct<	Mon Mar 5 11:02	Define API for new Chunk classes, trying to make sure it is as close to current Chunk class as possible. The reasons to make changes are two-fold: support for Anvil format, and better support for data bits
+587e19195174a38f22e0ddcb3c46bdef21dbbac5	c	e	Sun Mar 4 00:49	Definition of variables for new Chunk classes
+ed206897e04c5213691805d20824f6cd6249b75d	c	eF	Sat Mar 3 13:34	Full revert of 9a5e4 to allow for complete rewrite of Chunk class
+9a5e485616636aeeb298e2b960b9c1a5b1382f4d	c	eX	Fri Mar 2 04:11	Add Python trickery to automatically detect the chunk type and return the correct subclass
+
+4774359c8e669de31e3f7472cb83cc47ceb32690	t	-	Fri Mar 9 00:14	Add test files for anvil, mcregion
+
+
+?Add setter and getters (which check the type)
+3e7cab9483e07d2d74d00914cebfe4dcc53e3896	n	nF	Sun Mar 4 15:13	Bug fixes in setting and deleting items in Tag_Compounds
+e8cd30870cb139c61e01f1367a7465dfa5389fd1	n	n<X	Sun Mar 4 02:07	speed improvement: keep a dict names -> index for TAG_Compound
+
+
++Add method to add new BlockType to BlockFactory()
+fd76a5d9953e6d5ba57474be02f746a114278406	b	b	Mon Mar 5 11:02	Add solid property to block types
+3ceca665bca42938066bd8c3554e2c2977fd44ab	b	b	Sun Mar 4 00:50	rename Biome ID 255 to 'undetermined'
+20c594bb25e27d3d3b0a8830926ef50a568982d8	eb	wb<	Sat Mar 3 10:56	Correction for biome ID 255
+90879e72b302c35437963ff714a1eae5dc292b7b	eu	b	Fri Mar 2 22:54	Outline of a block ID name library
+
+
+
+< = split
+X = contains bugs, combine
+F = bug fix
++ = add version change
+
+Files:
+c - chunk
+w - world
+n - nbt
+b - name
+e - example
+t - tests
+r - region
