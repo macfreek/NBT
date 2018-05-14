@@ -24,10 +24,41 @@ if __name__ == '__main__':
     for nbtfile in sys.argv[1:]:
         try:
             print(nbtfile)
-            nbttag = NBTFile(nbtfile)
+            # Try to read nbt file, assuming the NBT file is GZipped.
+            try:
+                nbttag = None
+                fileobj = open(nbtfile, 'rb')
+                nbttag = NBTFile()
+                nbttag.parse_file(fileobj = fileobj)
+            except (OSError, IOError) as exc:
+                if 'Not a gzipped file' in str(exc):
+                    pass
+                else:
+                    raise
+            finally:
+                try:
+                    fileobj.close()
+                except Exception:
+                    pass
+            if not nbttag:
+                # File is not GZipped. Try to open the NBT assuming no compression.
+                try:
+                    fileobj = open(nbtfile, 'rb')
+                    nbttag = NBTFile()
+                    nbttag.parse_file(buffer = fileobj)
+                    fileobj.close()
+                finally:
+                    try:
+                        fileobj.close()
+                    except Exception:
+                        pass
+        except Exception as e:
+            try:
+                print(nbttag.pretty_tree())
+            except Exception:
+                pass
+            sys.stderr.write("%s %s\n" % (type(e), str(e)))
+            raise
+        else:
             print(nbttag.pretty_tree())
-        except IOError as e:
-            sys.stderr.write("%s: %s\n" % (e.filename, e.strerror))
-            sys.exit(72) # EX_IOERR
     sys.exit(0)
-
