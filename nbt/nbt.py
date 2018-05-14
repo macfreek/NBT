@@ -91,6 +91,11 @@ class _TAG_Numeric(TAG):
 
     def _render_buffer(self, buffer):
         buffer.write(self.fmt.pack(self.value))
+    
+    def __int__(self):
+        return int(self.value)
+        # TODO: only for int, byre, short
+        # TODO: also float()
 
 class _TAG_End(TAG):
     id = TAG_END
