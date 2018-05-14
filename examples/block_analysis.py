@@ -134,7 +134,10 @@ def main(world_folder, start=None, stop=None):
         print("No such folder as "+world_folder)
         return 2 # ENOENT
     
-    regions = glob.glob(os.path.join(world_folder,'region','*.mcr'))
+    if os.path.isfile(world_folder):
+        regions = [world_folder]
+    else:
+        regions = glob.glob(os.path.join(world_folder, 'region','*.mca'))
     
     block_data_totals = [[0]*16 for i in range(256)] # up to 16 data numbers in 256 block IDs
     try:

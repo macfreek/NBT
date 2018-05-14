@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 """
-Counter the number of biomes in the world. Works only for Anvil-based world folders.
+Count the number of biomes in the world. Works only for Anvil-based world folders.
 """
 import locale, os, sys
 from struct import pack, unpack
@@ -60,14 +60,19 @@ def print_results(biome_totals):
 
 
 def main(world_folder):
-    world = AnvilWorldFolder(world_folder)  # Not supported for McRegion
-    if not world.nonempty():  # likely still a McRegion file
-        sys.stderr.write("World folder %r is empty or not an Anvil formatted world\n" % world_folder)
-        return 65  # EX_DATAERR
-    biome_totals = [0]*256 # 256 counters for 256 biome IDs
+    if os.path.isdir(world_folder):
+        world = AnvilWorldFolder(world_folder)  # Not supported for McRegion
+        if not world.nonempty():  # likely still a McRegion file
+            sys.stderr.write("World folder %r is empty or not an Anvil formatted world\n" % world_folder)
+            return 65  # EX_DATAERR
+        nbt_iterator = world.iter_nbt()
+    else:
+        region = RegionFile(world_folder)
+        nbt_iterator = region
     
+    biome_totals = [0]*256 # 256 counters for 256 biome IDs
     try:
-        for chunk in world.iter_nbt():
+        for chunk in nbt_iterator:
             for biomeid in chunk["Level"]["Biomes"]:
                 biome_totals[biomeid] += 1
 
